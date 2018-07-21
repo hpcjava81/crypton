@@ -20,6 +20,9 @@ dependencies {
     //websocket-jetty
     compile 'org.eclipse.jetty.websocket:websocket-client:9.4.11.v20180605'
 
+    //json
+    compile 'com.google.code.gson:gson:2.8.5'
+
     //fastutil
     compile 'it.unimi.dsi:fastutil:8.1.1'
 

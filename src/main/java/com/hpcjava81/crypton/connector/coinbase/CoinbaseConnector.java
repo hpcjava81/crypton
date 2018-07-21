@@ -1,5 +1,7 @@
-package com.hpcjava81.crypton.connector;
+package com.hpcjava81.crypton.connector.coinbase;
 
+import com.hpcjava81.crypton.connector.Connector;
+import com.hpcjava81.crypton.connector.ExchangeHandler;
 import com.hpcjava81.crypton.util.Args;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -33,14 +36,19 @@ public class CoinbaseConnector implements Connector {
 
     private final String subReq;
 
+    private final ExchangeHandler handler;
+
     private WebSocketClient client;
 
     private Callback callback;
 
     private CountDownLatch connectLatch;
 
-    public CoinbaseConnector(List<String> symbols) {
+    public CoinbaseConnector(List<String> symbols, ExchangeHandler handler) {
+        Objects.requireNonNull(handler, "handler is null");
         Args.requireNonEmpty(symbols, "symbol list null or empty");
+
+        this.handler = handler;
         this.subReq = SUB_REQ.replace("@@symbol-list@@", toCsv(symbols));
     }
 
@@ -134,7 +142,7 @@ public class CoinbaseConnector implements Connector {
         @OnWebSocketMessage
         public void onMessage(String msg) {
             //
-            log.info(msg);
+            handler.onMessage(msg);
         }
 
 
