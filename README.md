@@ -1,2 +1,2 @@
 # crypton
-Ultra fast Crypto Algo trading
+Crypto Algo trading

@@ -16,7 +16,6 @@ public class CoinbaseHandler implements ExchangeHandler {
     private final int sizeTickSize;
     private final Gson gson = new Gson();
 
-
     public CoinbaseHandler(OrderBook book, int priceTickSize, int sizeTickSize) {
         this.book = book;
         this.priceTickSize = priceTickSize;
