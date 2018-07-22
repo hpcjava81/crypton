@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+//perf: about 60% time spent in Websocket methods
 public class CoinbaseConnector implements Connector {
     private static final Logger log = LoggerFactory.getLogger(CoinbaseConnector.class);
 
@@ -141,7 +142,6 @@ public class CoinbaseConnector implements Connector {
 
         @OnWebSocketMessage
         public void onMessage(String msg) {
-            //
             handler.onMessage(msg);
         }
 

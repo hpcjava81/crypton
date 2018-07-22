@@ -50,10 +50,26 @@ public class OrderBook {
         asks.clear();
     }
 
-    public String dump() {
+    public String prettyPrint() {
+        if (bids.size() == 0 || asks.size() == 0) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
-        sb.append("bids: ").append(bids.keySet().size())
-                .append(", asks: ").append(asks.keySet().size());
+        sb.append("\t\tBID\t\t").append("\t\tASK\t\t").append("\n");
+        sb.append("\tSize\tPrice\t").append("|").append("\tSize\tPrice\t");
+        sb.append("\n");
+
+        IntBidirectionalIterator bidIter = bids.keySet().iterator();
+        IntBidirectionalIterator askIter = asks.keySet().iterator();
+        for(int i=0; i<10; i++) {
+            int bid = bidIter.nextInt();
+            sb.append("\t").append(bids.get(bid).getSize()).append("\t").append(bid);
+            sb.append("\t|\t");
+            int ask = askIter.nextInt();
+            sb.append("\t").append(ask).append("\t").append(asks.get(ask).getSize());
+            sb.append("\n");
+        }
 
         return sb.toString();
     }

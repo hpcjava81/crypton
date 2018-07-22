@@ -20,7 +20,7 @@ public class CoinbaseConnectorTest {
     @Before
     public void before() {
         this.orderBook = new OrderBook(ETHUSD);
-        this.handler = new CoinbaseHandler(orderBook,100,100000000);
+        this.handler = new CoinbaseHandler(orderBook,100,10000);
     }
 
     @Test
@@ -45,13 +45,13 @@ public class CoinbaseConnectorTest {
 
     @Test
     public void testConnection() throws Exception {
-        Connector coinbase = new CoinbaseConnector(Collections.singletonList("ETH-USD"), handler);
+        Connector coinbase = new CoinbaseConnector(Collections.singletonList(ETHUSD), handler);
         coinbase.start();
 
-        Thread.sleep(5000);
+        Thread.sleep(500000);
 
         coinbase.stop();
 
-        System.out.println(orderBook.dump());
+        System.out.println(orderBook.prettyPrint());
     }
 }

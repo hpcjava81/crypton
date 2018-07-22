@@ -14,6 +14,8 @@ public class CoinbaseHandler implements ExchangeHandler {
     private final OrderBook book;
     private final int priceTickSize;
     private final int sizeTickSize;
+    private final Gson gson = new Gson();
+
 
     public CoinbaseHandler(OrderBook book, int priceTickSize, int sizeTickSize) {
         this.book = book;
@@ -23,10 +25,10 @@ public class CoinbaseHandler implements ExchangeHandler {
 
     @Override
     public void onMessage(String json) {
-        if (log.isDebugEnabled()) {
-            log.info(json);
-        }
-
+        //perf: no need to keep checking for this - first is always snapshot and
+        //and only updates after that. Of course, if its not even an update then
+        //we can to safeguard check if it was a snapshot. String.indexOf() is a
+        //hot method.
         if (isSnapshot(json)) {
             processSnapshot(json);
         } else if (isUpdate(json)) {
@@ -37,7 +39,10 @@ public class CoinbaseHandler implements ExchangeHandler {
     private void processSnapshot(String json) {
         book.clear();
 
-        Snapshot snapshot = new Gson().fromJson(json, Snapshot.class);
+        //perf: very hot method - takes about 20% overall time just to parse
+        //(including the json parse on processUpdate())
+        Snapshot snapshot = gson.fromJson(json, Snapshot.class);
+
         long timestamp = System.currentTimeMillis();
         for (List<String> bid : snapshot.bids) {
             book.update(
@@ -58,7 +63,7 @@ public class CoinbaseHandler implements ExchangeHandler {
     }
 
     private void processUpdate(String json) {
-        L2Update l2Update = new Gson().fromJson(json, L2Update.class);
+        L2Update l2Update = gson.fromJson(json, L2Update.class);
         long timestamp = System.currentTimeMillis();
         for (List<String> change : l2Update.changes) {
             boolean bid = "buy".equals(change.get(0));
@@ -85,12 +90,36 @@ public class CoinbaseHandler implements ExchangeHandler {
     }
 
     public static class Snapshot {
-        public List<List<String>> bids;
-        public List<List<String>> asks;
+        private List<List<String>> bids;
+        private List<List<String>> asks;
+
+        public List<List<String>> getBids() {
+            return bids;
+        }
+
+        public void setBids(List<List<String>> bids) {
+            this.bids = bids;
+        }
+
+        public List<List<String>> getAsks() {
+            return asks;
+        }
+
+        public void setAsks(List<List<String>> asks) {
+            this.asks = asks;
+        }
     }
 
     public static class L2Update {
-        public List<List<String>> changes;
+        private List<List<String>> changes;
+
+        public List<List<String>> getChanges() {
+            return changes;
+        }
+
+        public void setChanges(List<List<String>> changes) {
+            this.changes = changes;
+        }
     }
 
 }
