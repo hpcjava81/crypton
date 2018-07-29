@@ -8,8 +8,7 @@ import net.openhft.chronicle.wire.WireOut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class ChronicleWriter {
     private static final Logger log = LoggerFactory.getLogger(ChronicleWriter.class);
@@ -29,19 +28,27 @@ public class ChronicleWriter {
     }
 
     public void write(final OrderBook book) {
-        executor.submit(() -> {
+        Future<?> fut = executor.submit(() -> {
             write0(book);
         });
+
+        try {
+            fut.get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Timed out waiting for chronicle write to complete: "
+                    + queuePath, e);
+        }
     }
 
     //pkg-pvt for tests
     void write0(OrderBook book) {
         try {
-            this.appender.writeDocument(w -> w.write(book.getSymbol()).marshallable(
-                    m -> {
-                        encode(book, m);
-                    }
-            ));
+            this.appender.writeDocument(w ->
+                    w.write(book.getSymbol())
+                            .marshallable(m -> {
+                                        encode(book, m);
+                                    }
+                            ));
         } catch (Throwable e) {
             log.error("Error writing to queue " + queuePath, e);
             //TODO rethrow?
@@ -52,18 +59,19 @@ public class ChronicleWriter {
         /*
         this is 3x faster than encode0() below and uses
         7x less memory.
+        size = 8 + 4 + 4 + 50*(4*4) = 816 bytes per message
          */
 
         m.getValueOut().int64(System.currentTimeMillis())
                 .getValueOut().float32(book.getPriceTickSize())
                 .getValueOut().float32(book.getSizeTickSize());
 
-        int[][] levels = book.topNLevels(50);//hard coded
-        for (int i = 0; i < levels.length; i++) {
-            m.getValueOut().int32(levels[i][1])
-                    .getValueOut().int32(levels[i][0])
-                    .getValueOut().int32(levels[i][2])
-                    .getValueOut().int32(levels[i][3]);
+        int[][] levels = book.topNLevels(50);//TODO hard coded
+        for (int[] level : levels) {
+            m.getValueOut().int32(level[1])
+                    .getValueOut().int32(level[0])
+                    .getValueOut().int32(level[2])
+                    .getValueOut().int32(level[3]);
         }
     }
 

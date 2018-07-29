@@ -13,16 +13,17 @@ public class CoinbaseHandler implements ExchangeHandler {
     private static final Logger log = LoggerFactory.getLogger(CoinbaseHandler.class);
 
     private final OrderBook book;
-    private final ChronicleWriter writer;
+    private final ChronicleWriter chronicleWriter;
     private final int priceTickSize;
     private final int sizeTickSize;
     private final Gson gson = new Gson();
 
-    public CoinbaseHandler(OrderBook book, ChronicleWriter writer,
+    public CoinbaseHandler(OrderBook book, ChronicleWriter chronicleWriter,
                            int priceTickSize, int sizeTickSize) {
         this.book = book;
         book.setTickSizes(priceTickSize, sizeTickSize);
-        this.writer = writer;
+
+        this.chronicleWriter = chronicleWriter;
         this.priceTickSize = priceTickSize;
         this.sizeTickSize = sizeTickSize;
     }
@@ -65,7 +66,7 @@ public class CoinbaseHandler implements ExchangeHandler {
                     );
         }
 
-        writer.write(book);
+        chronicleWriter.write(book);
     }
 
     private void processUpdate(String json) {
@@ -82,7 +83,7 @@ public class CoinbaseHandler implements ExchangeHandler {
             }
         }
 
-        writer.write(book);
+        chronicleWriter.write(book);
     }
 
     private static int toInt(String str, int tickSize) {
@@ -97,6 +98,7 @@ public class CoinbaseHandler implements ExchangeHandler {
         return json.contains("l2update");
     }
 
+    @SuppressWarnings("unused")
     public static class Snapshot {
         private List<List<String>> bids;
         private List<List<String>> asks;
@@ -118,6 +120,7 @@ public class CoinbaseHandler implements ExchangeHandler {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class L2Update {
         private List<List<String>> changes;
 
