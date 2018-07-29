@@ -8,42 +8,28 @@ import net.openhft.chronicle.wire.WireOut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
-
 public class ChronicleWriter {
     private static final Logger log = LoggerFactory.getLogger(ChronicleWriter.class);
 
     private final String queuePath;
     private final ChronicleQueue queue;
-    private final ExcerptAppender appender;
-
-    //need this as otherwise Chronicle complains about multi-threaded access.
-    //this can be a perf issue due to context switch
-    private final ExecutorService executor = Executors.newFixedThreadPool(1);
 
     public ChronicleWriter(final String queuePath) {
         this.queuePath = queuePath;
         this.queue = SingleChronicleQueueBuilder.binary(queuePath).build();
-        this.appender = queue.acquireAppender();
     }
 
     public void write(final OrderBook book) {
-        Future<?> fut = executor.submit(() -> {
-            write0(book);
-        });
-
-        try {
-            fut.get(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.error("Timed out waiting for chronicle write to complete: "
-                    + queuePath, e);
-        }
+        //Note: we acquire an appender on every call. This is done as otherwise
+        //writing from multi-threads using the same appender doesn't work.
+        //Internally it seems Chronicle keeps a thread local cache of appenders
+        //so this shouldn't result in a new object creation every time.
+        write0(book, queue.acquireAppender());
     }
 
-    //pkg-pvt for tests
-    void write0(OrderBook book) {
+    private void write0(OrderBook book, ExcerptAppender appender) {
         try {
-            this.appender.writeDocument(w ->
+            appender.writeDocument(w ->
                     w.write(book.getSymbol())
                             .marshallable(m -> {
                                         encode(book, m);
@@ -100,6 +86,5 @@ public class ChronicleWriter {
 
     public void close() {
         queue.close();
-        executor.shutdownNow();
     }
 }

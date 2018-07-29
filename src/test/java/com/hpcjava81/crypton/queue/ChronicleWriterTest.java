@@ -27,7 +27,7 @@ public class ChronicleWriterTest {
 
     @Test
     public void testWriteOneBook() throws Exception {
-        w.write0(createNewBook());
+        w.write(createNewBook());
 
         String dump = w.getQueue().dump();
         System.out.println(dump);
@@ -41,7 +41,7 @@ public class ChronicleWriterTest {
         int N = 1_000_000;
         long start = System.nanoTime();
         for(int i = 0; i< N; i++) {
-            w.write0(book);
+            w.write(book);
         }
         long took = System.nanoTime() - start;
 
