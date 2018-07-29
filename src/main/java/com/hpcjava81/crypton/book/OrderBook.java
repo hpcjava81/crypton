@@ -2,6 +2,8 @@ package com.hpcjava81.crypton.book;
 
 import it.unimi.dsi.fastutil.ints.*;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class OrderBook {
 
     private final Int2ObjectSortedMap<OrderBookEntry> bids =
@@ -11,11 +13,30 @@ public class OrderBook {
 
     private final String symbol;
 
+    private final AtomicInteger lock = new AtomicInteger(0);
+    private int priceTickSize;
+    private int sizeTickSize;
+
     public OrderBook(String symbol) {
         this.symbol = symbol;
     }
 
     public void update(int price, int size, long timestamp, boolean bid) {
+        while (true) {
+            if (lock.get() == 0) {
+                if (lock.compareAndSet(0, 1)) {
+                    try {
+                        doUpdate(price, size, timestamp, bid);
+                        return;
+                    } finally {
+                        lock.compareAndSet(1, 0);
+                    }
+                }
+            }
+        }
+    }
+
+    private void doUpdate(int price, int size, long timestamp, boolean bid) {
         OrderBookEntry obe;
         if (bid) {
             obe = bids.get(price);
@@ -34,10 +55,21 @@ public class OrderBook {
     }
 
     public void remove(int price, boolean bid) {
-        if (bid) {
-            bids.remove(price);
-        } else {
-            asks.remove(price);
+        while (true) {
+            if (lock.get() == 0) {
+                if (lock.compareAndSet(0, 1)) {
+                    try {
+                        if (bid) {
+                            bids.remove(price);
+                        } else {
+                            asks.remove(price);
+                        }
+                        return;
+                    } finally {
+                        lock.compareAndSet(1, 0);
+                    }
+                }
+            }
         }
     }
 
@@ -45,32 +77,81 @@ public class OrderBook {
         return symbol;
     }
 
-    public void clear() {
-        bids.clear();
-        asks.clear();
+    public int[][] topNLevels(int N) {
+        while (true) {
+            if (lock.get() == 0) {
+                if (lock.compareAndSet(0, 1)) {
+                    try {
+                        int bidSize = bids.size();
+                        int askSize = asks.size();
+                        if (bidSize == 0 || askSize == 0) {
+                            return new int[0][0];
+                        }
+
+                        IntBidirectionalIterator bidIter = bids.keySet().iterator();
+                        IntBidirectionalIterator askIter = asks.keySet().iterator();
+
+                        if (N < 0) {
+                            N = Math.max(bidSize, askSize);
+                        }
+
+                        int[][] ret = new int[N][4];
+                        int pos = 0;
+                        while (pos < N && (bidIter.hasNext() || askIter.hasNext())) {
+                            if (bidIter.hasNext()) {
+                                int bK = bidIter.nextInt();
+                                ret[pos][0] = bids.get(bK).getSize();
+                                ret[pos][1] = bK;
+                            }
+
+                            if (askIter.hasNext()) {
+                                int aK = askIter.nextInt();
+                                ret[pos][2] = aK;
+                                ret[pos][3] = asks.get(aK).getSize();
+                            }
+
+                            pos++;
+                        }
+
+                        return ret;
+                    } finally {
+                        lock.compareAndSet(1, 0);
+                    }
+                }
+            }
+        }
     }
 
-    public String prettyPrint() {
-        if (bids.size() == 0 || asks.size() == 0) {
-            return "";
+    public void clear() {
+        while (true) {
+            if (lock.get() == 0) {
+                if (lock.compareAndSet(0, 1)) {
+                    try {
+                        bids.clear();
+                        asks.clear();
+                        return;
+                    } finally {
+                        lock.compareAndSet(1, 0);
+                    }
+                }
+            }
         }
+    }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("\t\tBID\t\t").append("\t\tASK\t\t").append("\n");
-        sb.append("\tSize\tPrice\t").append("|").append("\tSize\tPrice\t");
-        sb.append("\n");
+    public int[][] dump() {
+        return topNLevels(-1);//get all
+    }
 
-        IntBidirectionalIterator bidIter = bids.keySet().iterator();
-        IntBidirectionalIterator askIter = asks.keySet().iterator();
-        for(int i=0; i<10; i++) {
-            int bid = bidIter.nextInt();
-            sb.append("\t").append(bids.get(bid).getSize()).append("\t").append(bid);
-            sb.append("\t|\t");
-            int ask = askIter.nextInt();
-            sb.append("\t").append(ask).append("\t").append(asks.get(ask).getSize());
-            sb.append("\n");
-        }
+    public void setTickSizes(int priceTickSize, int sizeTickSize) {
+        this.priceTickSize = priceTickSize;
+        this.sizeTickSize = sizeTickSize;
+    }
 
-        return sb.toString();
+    public int getPriceTickSize() {
+        return priceTickSize;
+    }
+
+    public int getSizeTickSize() {
+        return sizeTickSize;
     }
 }

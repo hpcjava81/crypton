@@ -3,11 +3,16 @@ package com.hpcjava81.crypton.connector.coinbase;
 import com.hpcjava81.crypton.book.OrderBook;
 import com.hpcjava81.crypton.connector.Connector;
 import com.hpcjava81.crypton.connector.ExchangeHandler;
+import com.hpcjava81.crypton.queue.ChronicleWriter;
+import com.hpcjava81.crypton.util.TestUtil;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,11 +21,15 @@ public class CoinbaseConnectorTest {
 
     private ExchangeHandler handler;
     private OrderBook orderBook;
+    private ChronicleWriter writer;
+    private String queuePath;
 
     @Before
     public void before() {
+        this.queuePath = "./test/data/" + ETHUSD;
+        this.writer = new ChronicleWriter(queuePath);
         this.orderBook = new OrderBook(ETHUSD);
-        this.handler = new CoinbaseHandler(orderBook,100,10000);
+        this.handler = new CoinbaseHandler(orderBook, writer, 100,10000);
     }
 
     @Test
@@ -48,10 +57,22 @@ public class CoinbaseConnectorTest {
         Connector coinbase = new CoinbaseConnector(Collections.singletonList(ETHUSD), handler);
         coinbase.start();
 
-        Thread.sleep(500000);
+        Thread.sleep(1000);
 
         coinbase.stop();
 
-        System.out.println(orderBook.prettyPrint());
+        int[][] dump = orderBook.dump();
+        for(int i=0; i<dump.length; i++) {
+            System.out.println(Arrays.toString(dump[i]));
+        }
+
+        System.out.println("--------QUEUE DUMP----------");
+        System.out.println(writer.getQueue().dump());
+    }
+
+    @After
+    public void after() throws Exception {
+        writer.close();
+        TestUtil.deleteFilesIn(Paths.get(queuePath));
     }
 }
