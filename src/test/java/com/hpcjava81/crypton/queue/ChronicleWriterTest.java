@@ -45,7 +45,7 @@ public class ChronicleWriterTest {
         }
         long took = System.nanoTime() - start;
 
-        System.out.println("Took: " + (took/1e9));
+        System.out.println("Took: " + (took/1e9) + " seconds");
         System.out.println((took/(N*1e3)) + "us per op");
     }
 
@@ -66,7 +66,7 @@ public class ChronicleWriterTest {
     @After
     public void after() throws Exception {
         w.close();
-//        TestUtil.deleteFilesIn(Paths.get(queuePath));
+        TestUtil.deleteFilesIn(Paths.get(queuePath));
     }
 
 }
