@@ -27,14 +27,26 @@ public class ChronicleWriterTest {
 
     @Test
     public void testWriteOneBook() throws Exception {
-        w.write(createNewBook());
-
-        //wait for the writer thread to do the write
-        Thread.sleep(1000);
+        w.write0(createNewBook());
 
         String dump = w.getQueue().dump();
         System.out.println(dump);
         Assert.assertNotNull(dump);
+    }
+
+    @Test
+    public void testWriteMultiOrderBook() throws Exception {
+        OrderBook book = createNewBook();
+
+        int N = 1_000_000;
+        long start = System.nanoTime();
+        for(int i = 0; i< N; i++) {
+            w.write0(book);
+        }
+        long took = System.nanoTime() - start;
+
+        System.out.println("Took: " + (took/1e9));
+        System.out.println((took/(N*1e3)) + "us per op");
     }
 
     @NotNull
@@ -54,7 +66,7 @@ public class ChronicleWriterTest {
     @After
     public void after() throws Exception {
         w.close();
-        TestUtil.deleteFilesIn(Paths.get(queuePath));
+//        TestUtil.deleteFilesIn(Paths.get(queuePath));
     }
 
 }
