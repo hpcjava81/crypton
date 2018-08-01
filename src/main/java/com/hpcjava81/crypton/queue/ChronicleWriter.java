@@ -9,6 +9,8 @@ import net.openhft.chronicle.wire.WireOut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 public class ChronicleWriter {
     private static final Logger log = LoggerFactory.getLogger(ChronicleWriter.class);
 
@@ -17,7 +19,6 @@ public class ChronicleWriter {
     private final String queuePath;
     private final ChronicleQueue queue;
     private final ReusableObjPool<int[][]> pool;
-
 
     public ChronicleWriter(final String queuePath) {
         this.queuePath = queuePath;
@@ -35,10 +36,7 @@ public class ChronicleWriter {
 
     private void write0(OrderBook book, ExcerptAppender appender) {
         try {
-            appender.writeDocument(w -> {
-                        encode(book, w);
-                    }
-            );
+            appender.writeDocument(w -> encode(book, w));
         } catch (Throwable e) {
             log.error("Error writing to queue " + queuePath, e);
             //TODO rethrow?
@@ -68,6 +66,10 @@ public class ChronicleWriter {
             }
 
         } finally {
+            // this is terribly slow to the extent we lose the benefit of object
+            // re-use :-(
+            reset(toFill);
+
             pool.release(toFill);
         }
 
@@ -91,7 +93,16 @@ public class ChronicleWriter {
                         .write("askQty" + i).int32(toFill[i][3]);
             }
         } finally {
+            reset(toFill);
             pool.release(toFill);
+        }
+    }
+
+    private void reset(int[][] toFill) {
+        if (toFill != null) {
+            for(int i=0; i<MAX_LEVELS; i++) {
+                Arrays.fill(toFill[i], 0);
+            }
         }
     }
 
