@@ -77,7 +77,7 @@ public class OrderBook {
         return symbol;
     }
 
-    public int[][] topNLevels(int N) {
+    public int[][] topNLevels(int N, int[][] toFill) {
         while (true) {
             if (lock.get() == 0) {
                 if (lock.compareAndSet(0, 1)) {
@@ -85,7 +85,7 @@ public class OrderBook {
                         int bidSize = bids.size();
                         int askSize = asks.size();
                         if (bidSize == 0 || askSize == 0) {
-                            return new int[0][0];
+                            return toFill;
                         }
 
                         IntBidirectionalIterator bidIter = bids.keySet().iterator();
@@ -95,25 +95,25 @@ public class OrderBook {
                             N = Math.max(bidSize, askSize);
                         }
 
-                        int[][] ret = new int[N][4];
                         int pos = 0;
+                        toFill = toFill == null ? new int[N][4] : toFill;
                         while (pos < N && (bidIter.hasNext() || askIter.hasNext())) {
                             if (bidIter.hasNext()) {
                                 int bK = bidIter.nextInt();
-                                ret[pos][0] = bids.get(bK).getSize();
-                                ret[pos][1] = bK;
+                                toFill[pos][0] = bids.get(bK).getSize();
+                                toFill[pos][1] = bK;
                             }
 
                             if (askIter.hasNext()) {
                                 int aK = askIter.nextInt();
-                                ret[pos][2] = aK;
-                                ret[pos][3] = asks.get(aK).getSize();
+                                toFill[pos][2] = aK;
+                                toFill[pos][3] = asks.get(aK).getSize();
                             }
 
                             pos++;
                         }
 
-                        return ret;
+                        return toFill;
                     } finally {
                         lock.compareAndSet(1, 0);
                     }
@@ -139,7 +139,7 @@ public class OrderBook {
     }
 
     public int[][] dump() {
-        return topNLevels(-1);//get all
+        return topNLevels(-1, null); //get all
     }
 
     public void setTickSizes(int priceTickSize, int sizeTickSize) {

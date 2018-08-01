@@ -1,6 +1,7 @@
 package com.hpcjava81.crypton.queue;
 
 import com.hpcjava81.crypton.book.OrderBook;
+import com.hpcjava81.crypton.util.ReusableObjPool;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
@@ -11,12 +12,17 @@ import org.slf4j.LoggerFactory;
 public class ChronicleWriter {
     private static final Logger log = LoggerFactory.getLogger(ChronicleWriter.class);
 
+    private static final int MAX_LEVELS = 50;
+
     private final String queuePath;
     private final ChronicleQueue queue;
+    private final ReusableObjPool<int[][]> pool;
+
 
     public ChronicleWriter(final String queuePath) {
         this.queuePath = queuePath;
         this.queue = SingleChronicleQueueBuilder.binary(queuePath).build();
+        this.pool = new ReusableObjPool<>(() -> new int[MAX_LEVELS][4], 128);
     }
 
     public void write(final OrderBook book) {
@@ -50,13 +56,21 @@ public class ChronicleWriter {
                 .getValueOut().float32(book.getPriceTickSize())
                 .getValueOut().float32(book.getSizeTickSize());
 
-        int[][] levels = book.topNLevels(50);//TODO hard coded
-        for (int[] level : levels) {
-            m.getValueOut().int32(level[1])
-                    .getValueOut().int32(level[0])
-                    .getValueOut().int32(level[2])
-                    .getValueOut().int32(level[3]);
+        int[][] toFill = null;
+        try {
+            toFill = pool.get();
+            book.topNLevels(MAX_LEVELS, toFill);
+            for (int[] level : toFill) {
+                m.getValueOut().int32(level[1])
+                        .getValueOut().int32(level[0])
+                        .getValueOut().int32(level[2])
+                        .getValueOut().int32(level[3]);
+            }
+
+        } finally {
+            pool.release(toFill);
         }
+
     }
 
     @SuppressWarnings("unsued")
@@ -65,12 +79,19 @@ public class ChronicleWriter {
                 .write("priceTick").float32(book.getPriceTickSize())
                 .write("sizeTick").float32(book.getSizeTickSize());
 
-        int[][] levels = book.topNLevels(50);//hard coded
-        for (int i = 0; i < levels.length; i++) {
-            m.write("bidPx" + i).int32(levels[i][1])
-                    .write("bidQty" + i).int32(levels[i][0])
-                    .write("askPx" + i).int32(levels[i][2])
-                    .write("askQty" + i).int32(levels[i][3]);
+
+        int[][] toFill = null;
+        try {
+            toFill = pool.get();
+            book.topNLevels(MAX_LEVELS, toFill);
+            for (int i = 0; i < toFill.length; i++) {
+                m.write("bidPx" + i).int32(toFill[i][1])
+                        .write("bidQty" + i).int32(toFill[i][0])
+                        .write("askPx" + i).int32(toFill[i][2])
+                        .write("askQty" + i).int32(toFill[i][3]);
+            }
+        } finally {
+            pool.release(toFill);
         }
     }
 
