@@ -57,13 +57,13 @@ public class CoinbaseConnectorTest {
         Connector coinbase = new CoinbaseConnector(Collections.singletonList(ETHUSD), handler);
         coinbase.start();
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
 
         coinbase.stop();
 
         int[][] dump = orderBook.dump();
-        for(int i=0; i<dump.length; i++) {
-            System.out.println(Arrays.toString(dump[i]));
+        for (int[] aDump : dump) {
+            System.out.println(Arrays.toString(aDump));
         }
 
         System.out.println("--------QUEUE DUMP----------");

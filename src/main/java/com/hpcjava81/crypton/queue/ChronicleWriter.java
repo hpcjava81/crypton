@@ -29,12 +29,10 @@ public class ChronicleWriter {
 
     private void write0(OrderBook book, ExcerptAppender appender) {
         try {
-            appender.writeDocument(w ->
-                    w.write(book.getSymbol())
-                            .marshallable(m -> {
-                                        encode(book, m);
-                                    }
-                            ));
+            appender.writeDocument(w -> {
+                        encode(book, w);
+                    }
+            );
         } catch (Throwable e) {
             log.error("Error writing to queue " + queuePath, e);
             //TODO rethrow?
@@ -43,11 +41,11 @@ public class ChronicleWriter {
 
     private void encode(OrderBook book, WireOut m) {
         /*
-        this is 3x faster than encode0() below and uses
-        7x less memory.
-        size = 8 + 4 + 4 + 50*(4*4) = 816 bytes per message
-         */
-
+         * this is 3x faster than encode0() below and uses
+         * 7x less memory.
+         *
+         * size = 8 + 4 + 4 + 50*(4*4) = 816 bytes per message
+        */
         m.getValueOut().int64(System.currentTimeMillis())
                 .getValueOut().float32(book.getPriceTickSize())
                 .getValueOut().float32(book.getSizeTickSize());
