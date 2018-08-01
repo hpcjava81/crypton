@@ -37,8 +37,9 @@ public class ChronicleReader {
                     float priceTick = in.float32();
                     float sizeTick = in.float32();
 
-                    //TODO - temp remove before check-in
-                    log.info(timestamp + "|" + priceTick + "|" + sizeTick);
+                    //TODO add all fields
+
+//                    log.info(timestamp + "|" + priceTick + "|" + sizeTick);
 
                     //TODO
 
