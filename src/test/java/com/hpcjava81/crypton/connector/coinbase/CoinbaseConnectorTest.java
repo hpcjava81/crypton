@@ -1,6 +1,7 @@
 package com.hpcjava81.crypton.connector.coinbase;
 
 import com.hpcjava81.crypton.book.OrderBook;
+import com.hpcjava81.crypton.book.OrderBookChangeListener;
 import com.hpcjava81.crypton.connector.Connector;
 import com.hpcjava81.crypton.connector.ExchangeHandler;
 import com.hpcjava81.crypton.queue.ChronicleWriter;
@@ -12,7 +13,6 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,7 +29,8 @@ public class CoinbaseConnectorTest {
         this.queuePath = "./test/data/" + ETHUSD;
         this.writer = new ChronicleWriter(queuePath);
         this.orderBook = new OrderBook(ETHUSD);
-        this.handler = new CoinbaseHandler(orderBook, writer, 100,10000);
+        this.handler = new CoinbaseHandler(orderBook,
+                new OrderBookChangeListener[]{writer}, 100,10000);
     }
 
     @Test
@@ -60,14 +61,6 @@ public class CoinbaseConnectorTest {
         Thread.sleep(5000);
 
         coinbase.stop();
-
-        int[][] dump = orderBook.dump();
-        for (int[] aDump : dump) {
-            System.out.println(Arrays.toString(aDump));
-        }
-
-        System.out.println("--------QUEUE DUMP----------");
-        System.out.println(writer.getQueue().dump());
     }
 
     @After

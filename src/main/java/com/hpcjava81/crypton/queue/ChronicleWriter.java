@@ -1,6 +1,7 @@
 package com.hpcjava81.crypton.queue;
 
 import com.hpcjava81.crypton.book.OrderBook;
+import com.hpcjava81.crypton.book.OrderBookChangeListener;
 import com.hpcjava81.crypton.util.ReusableObjPool;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptAppender;
@@ -9,9 +10,7 @@ import net.openhft.chronicle.wire.WireOut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-
-public class ChronicleWriter {
+public class ChronicleWriter implements OrderBookChangeListener {
     private static final Logger log = LoggerFactory.getLogger(ChronicleWriter.class);
 
     private static final int MAX_LEVELS = 50;
@@ -24,6 +23,11 @@ public class ChronicleWriter {
         this.queuePath = queuePath;
         this.queue = SingleChronicleQueueBuilder.binary(queuePath).build();
         this.pool = new ReusableObjPool<>(() -> new int[MAX_LEVELS][4], 128);
+    }
+
+    @Override
+    public void onChange(OrderBook book) {
+        write(book);
     }
 
     public void write(final OrderBook book) {
@@ -68,7 +72,6 @@ public class ChronicleWriter {
             //no reset needed as we always know how many levels have data
             pool.release(toFill);
         }
-
     }
 
     @SuppressWarnings("unsued")
@@ -76,7 +79,6 @@ public class ChronicleWriter {
         m.write("timestamp").int64(System.currentTimeMillis())
                 .write("priceTick").float32(book.getPriceTickSize())
                 .write("sizeTick").float32(book.getSizeTickSize());
-
 
         int[][] toFill = null;
         try {

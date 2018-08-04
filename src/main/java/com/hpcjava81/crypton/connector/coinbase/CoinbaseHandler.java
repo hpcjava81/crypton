@@ -2,8 +2,8 @@ package com.hpcjava81.crypton.connector.coinbase;
 
 import com.google.gson.Gson;
 import com.hpcjava81.crypton.book.OrderBook;
+import com.hpcjava81.crypton.book.OrderBookChangeListener;
 import com.hpcjava81.crypton.connector.ExchangeHandler;
-import com.hpcjava81.crypton.queue.ChronicleWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,17 +13,18 @@ public class CoinbaseHandler implements ExchangeHandler {
     private static final Logger log = LoggerFactory.getLogger(CoinbaseHandler.class);
 
     private final OrderBook book;
-    private final ChronicleWriter chronicleWriter;
+    private final OrderBookChangeListener[] listeners;
     private final int priceTickSize;
     private final int sizeTickSize;
     private final Gson gson = new Gson();
 
-    public CoinbaseHandler(OrderBook book, ChronicleWriter chronicleWriter,
+    public CoinbaseHandler(OrderBook book,
+                           OrderBookChangeListener[] listeners,
                            int priceTickSize, int sizeTickSize) {
         this.book = book;
         book.setTickSizes(priceTickSize, sizeTickSize);
 
-        this.chronicleWriter = chronicleWriter;
+        this.listeners = listeners;
         this.priceTickSize = priceTickSize;
         this.sizeTickSize = sizeTickSize;
     }
@@ -66,7 +67,7 @@ public class CoinbaseHandler implements ExchangeHandler {
                     );
         }
 
-        chronicleWriter.write(book);
+        notifyListeners();
     }
 
     private void processUpdate(String json) {
@@ -83,7 +84,13 @@ public class CoinbaseHandler implements ExchangeHandler {
             }
         }
 
-        chronicleWriter.write(book);
+        notifyListeners();
+    }
+
+    private void notifyListeners() {
+        for (OrderBookChangeListener l : listeners) {
+            l.onChange(book);
+        }
     }
 
     private static int toInt(String str, int tickSize) {
