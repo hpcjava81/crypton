@@ -77,7 +77,7 @@ public class OrderBook {
         return symbol;
     }
 
-    public int[][] topNLevels(int N, int[][] toFill) {
+    public int topNLevels(int N, int[][] toFill) {
         while (true) {
             if (lock.get() == 0) {
                 if (lock.compareAndSet(0, 1)) {
@@ -85,7 +85,7 @@ public class OrderBook {
                         int bidSize = bids.size();
                         int askSize = asks.size();
                         if (bidSize == 0 || askSize == 0) {
-                            return toFill;
+                            return 0;
                         }
 
                         IntBidirectionalIterator bidIter = bids.keySet().iterator();
@@ -113,7 +113,7 @@ public class OrderBook {
                             pos++;
                         }
 
-                        return toFill;
+                        return pos; //0-4 indices of the toFill array are filled
                     } finally {
                         lock.compareAndSet(1, 0);
                     }
@@ -139,7 +139,9 @@ public class OrderBook {
     }
 
     public int[][] dump() {
-        return topNLevels(-1, null); //get all
+        int[][] dump = new int[50][4];
+        topNLevels(50, dump);
+        return dump;
     }
 
     public void setTickSizes(int priceTickSize, int sizeTickSize) {

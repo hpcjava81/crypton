@@ -57,19 +57,15 @@ public class ChronicleWriter {
         int[][] toFill = null;
         try {
             toFill = pool.get();
-            book.topNLevels(MAX_LEVELS, toFill);
-            for (int[] level : toFill) {
-                m.getValueOut().int32(level[1])
-                        .getValueOut().int32(level[0])
-                        .getValueOut().int32(level[2])
-                        .getValueOut().int32(level[3]);
+            int levels = book.topNLevels(MAX_LEVELS, toFill);
+            for (int i=0; i<levels; i++) {
+                m.getValueOut().int32(toFill[i][1])
+                        .getValueOut().int32(toFill[i][0])
+                        .getValueOut().int32(toFill[i][2])
+                        .getValueOut().int32(toFill[i][3]);
             }
-
         } finally {
-            // this is terribly slow to the extent we lose the benefit of object
-            // re-use :-(
-            reset(toFill);
-
+            //no reset needed as we always know how many levels have data
             pool.release(toFill);
         }
 
@@ -85,24 +81,15 @@ public class ChronicleWriter {
         int[][] toFill = null;
         try {
             toFill = pool.get();
-            book.topNLevels(MAX_LEVELS, toFill);
-            for (int i = 0; i < toFill.length; i++) {
+            int levels = book.topNLevels(MAX_LEVELS, toFill);
+            for (int i = 0; i < levels; i++) {
                 m.write("bidPx" + i).int32(toFill[i][1])
                         .write("bidQty" + i).int32(toFill[i][0])
                         .write("askPx" + i).int32(toFill[i][2])
                         .write("askQty" + i).int32(toFill[i][3]);
             }
         } finally {
-            reset(toFill);
             pool.release(toFill);
-        }
-    }
-
-    private void reset(int[][] toFill) {
-        if (toFill != null) {
-            for(int i=0; i<MAX_LEVELS; i++) {
-                Arrays.fill(toFill[i], 0);
-            }
         }
     }
 
