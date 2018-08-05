@@ -4,6 +4,7 @@ import com.hpcjava81.crypton.book.OrderBook;
 import com.hpcjava81.crypton.book.OrderBookChangeListener;
 import com.hpcjava81.crypton.connector.Connector;
 import com.hpcjava81.crypton.connector.ExchangeHandler;
+import com.hpcjava81.crypton.domain.Instrument;
 import com.hpcjava81.crypton.queue.ChronicleWriter;
 import com.hpcjava81.crypton.util.TestUtil;
 import org.junit.After;
@@ -17,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class CoinbaseConnectorTest {
-    private static final String ETHUSD = "ETH-USD";
+    private static final Instrument ETHUSD = new Instrument("ETH-USD");
 
     private ExchangeHandler handler;
     private OrderBook orderBook;
@@ -26,7 +27,7 @@ public class CoinbaseConnectorTest {
 
     @Before
     public void before() {
-        this.queuePath = "./test/data/" + ETHUSD;
+        this.queuePath = "./test/data/" + ETHUSD.getName();
         this.writer = new ChronicleWriter(queuePath);
         this.orderBook = new OrderBook(ETHUSD);
         this.handler = new CoinbaseHandler(orderBook,
@@ -55,7 +56,8 @@ public class CoinbaseConnectorTest {
 
     @Test
     public void testConnection() throws Exception {
-        Connector coinbase = new CoinbaseConnector(Collections.singletonList(ETHUSD), handler);
+        Connector coinbase = new CoinbaseConnector(
+                Collections.singletonList(ETHUSD.getName()), handler);
         coinbase.start();
 
         Thread.sleep(5000);

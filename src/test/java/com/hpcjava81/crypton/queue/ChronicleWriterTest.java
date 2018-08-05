@@ -1,6 +1,7 @@
 package com.hpcjava81.crypton.queue;
 
 import com.hpcjava81.crypton.book.OrderBook;
+import com.hpcjava81.crypton.domain.Instrument;
 import com.hpcjava81.crypton.util.TestUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -51,7 +52,7 @@ public class ChronicleWriterTest {
 
     @NotNull
     private static OrderBook createNewBook() {
-        OrderBook book = new OrderBook("SYM1");
+        OrderBook book = new OrderBook(new Instrument("SYM1"));
         book.update(100, 10, 1, true);
         book.update(99, 10, 2, true);
         book.update(98, 10, 3, true);

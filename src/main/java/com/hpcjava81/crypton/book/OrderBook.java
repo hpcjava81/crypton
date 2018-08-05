@@ -1,5 +1,6 @@
 package com.hpcjava81.crypton.book;
 
+import com.hpcjava81.crypton.domain.Instrument;
 import it.unimi.dsi.fastutil.ints.*;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,14 +12,14 @@ public class OrderBook {
     private final Int2ObjectSortedMap<OrderBookEntry> asks =
             new Int2ObjectRBTreeMap<>(IntComparators.NATURAL_COMPARATOR);
 
-    private final String symbol;
+    private final Instrument instrument;
 
     private final AtomicInteger lock = new AtomicInteger(0);
     private int priceTickSize;
     private int sizeTickSize;
 
-    public OrderBook(String symbol) {
-        this.symbol = symbol;
+    public OrderBook(Instrument instrument) {
+        this.instrument = instrument;
     }
 
     public void update(int price, int size, long timestamp, boolean bid) {
@@ -74,7 +75,7 @@ public class OrderBook {
     }
 
     public String getSymbol() {
-        return symbol;
+        return instrument.getName();
     }
 
     public int topNLevels(int N, int[][] toFill) {
