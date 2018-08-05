@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -42,6 +43,10 @@ public class CoinbaseConnector implements Connector {
     private Callback callback;
 
     private CountDownLatch connectLatch;
+
+    public CoinbaseConnector(String symbol, ExchangeHandler handler) {
+        this(Collections.singletonList(symbol), handler);
+    }
 
     public CoinbaseConnector(List<String> symbols, ExchangeHandler handler) {
         Objects.requireNonNull(handler, "handler is null");
