@@ -63,7 +63,9 @@ public class TArb2Crypto1FiatStrat implements Strategy<TArb> {
                         + c1c2State.l1OrderBook()
                 );
             } else {
-                log.info("TArb: " + (pnl-1) + " (No trade)");
+                if (pnl-1 > 1e-4) {
+                    log.info("TArb: " + (pnl-1) + " (No trade)");
+                }
             }
         }, 500, 50, TimeUnit.MILLISECONDS);
     }

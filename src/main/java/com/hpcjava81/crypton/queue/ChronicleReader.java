@@ -37,6 +37,8 @@ public class ChronicleReader {
                     float priceTick = in.float32();
                     float sizeTick = in.float32();
 
+                    int levels = in.int32();
+
                     //TODO add all fields
 
 //                    log.info(timestamp + "|" + priceTick + "|" + sizeTick);

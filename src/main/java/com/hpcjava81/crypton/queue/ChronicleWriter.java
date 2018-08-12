@@ -62,6 +62,7 @@ public class ChronicleWriter implements OrderBookChangeListener {
         try {
             toFill = pool.get();
             int levels = book.topNLevels(MAX_LEVELS, toFill);
+            m.getValueOut().int32(levels);
             for (int i=0; i<levels; i++) {
                 m.getValueOut().int32(toFill[i][1])
                         .getValueOut().int32(toFill[i][0])

@@ -6,6 +6,9 @@
         </Console>
     </Appenders>
     <Loggers>
+        <Logger name="net.openhft.chronicle.queue" level="error">
+            <AppenderRef ref="ConsoleAppender"/>
+        </Logger>
         <Root level="info">
             <AppenderRef ref="ConsoleAppender"/>
         </Root>
