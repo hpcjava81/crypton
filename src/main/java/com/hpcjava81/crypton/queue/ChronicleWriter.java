@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class ChronicleWriter implements OrderBookChangeListener {
     private static final Logger log = LoggerFactory.getLogger(ChronicleWriter.class);
 
-    private static final int MAX_LEVELS = 50;
+    static final int MAX_LEVELS = 50;
 
     private final String queuePath;
     private final ChronicleQueue queue;
@@ -30,7 +30,7 @@ public class ChronicleWriter implements OrderBookChangeListener {
         write(book);
     }
 
-    public void write(final OrderBook book) {
+    void write(final OrderBook book) {
         //Note: we acquire an appender on every call. This is done as otherwise
         //writing from multi-threads using the same appender doesn't work.
         //Internally it seems Chronicle keeps a thread local cache of appenders
@@ -100,7 +100,7 @@ public class ChronicleWriter implements OrderBookChangeListener {
         return queuePath;
     }
 
-    public ChronicleQueue getQueue() {
+    ChronicleQueue getQueue() {
         return queue;
     }
 
