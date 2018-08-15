@@ -29,9 +29,8 @@ dependencies {
     //chronicle queue
     compile 'net.openhft:chronicle-queue:5.16.9'
 
-    //cassandra
-    compile 'com.datastax.cassandra:cassandra-driver-core:3.3.0'
-    compile 'com.datastax.cassandra:cassandra-driver-extras:3.3.0'
+    //influxdb java connector
+    compile 'org.influxdb:influxdb-java:2.8'
 
     //logging
     compile 'org.slf4j:slf4j-api:1.7.13'

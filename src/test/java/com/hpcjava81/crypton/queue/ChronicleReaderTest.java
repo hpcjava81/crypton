@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ChronicleReaderTest {
-    private static final String ETHUSD = "ETH-USD";
+    private static final String ETHUSD = "SYM1";
 
     private String queuePath;
     private ChronicleReader r;
@@ -13,7 +13,7 @@ public class ChronicleReaderTest {
     @Before
     public void before() throws Exception {
         queuePath = "./test/data/" + ETHUSD;
-        r = new ChronicleReader(queuePath);
+        r = new ChronicleReader(ETHUSD, queuePath);
     }
 
     @Test
